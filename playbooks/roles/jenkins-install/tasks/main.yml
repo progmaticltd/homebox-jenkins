@@ -1,0 +1,94 @@
+---
+
+- name: Add https transport
+  apt:
+    name: apt-transport-https
+
+- name: Update the packages
+  register: apt_key
+  apt_key:
+    url: https://pkg.jenkins.io/debian/jenkins.io.key
+    state: present
+
+- name: Add Jenkins repository
+  register: repo
+  apt_repository:
+    repo: deb http://pkg.jenkins.io/debian-stable binary/
+    state: present
+    filename: jenkins
+
+- name: Update packages cache
+  when: apt_key.changed or repo.changed
+  apt:
+    update_cache: true
+
+- name: Install Jenkins and dependencies
+  tags: apt
+  apt:
+    name: '{{ jenkins_pkgs }}'
+    state: latest
+
+- name: Install latest version of Ansible
+  tags: apt
+  apt:
+    name: ansible
+    state: latest
+    default_release: stretch-backports
+
+- name: Install the nginx template
+  tags: nginx
+  notify: Restart nginx
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/sites-available/jenkins.conf
+
+- name: Activate the nginx template
+  notify: Restart nginx
+  file:
+    src: /etc/nginx/sites-available/jenkins.conf
+    dest: /etc/nginx/sites-enabled/jenkins.conf
+    state: link
+
+- name: Add the Jenkins user to the Docker group
+  user:
+    name: jenkins
+    groups: docker
+
+- name: Copy the AppArmor rules for nginx
+  template:
+    src: apparmor.conf
+    dest: /etc/apparmor.d/local/nginx-jenkins.conf
+
+- name: Add the line in apparmor nginx config
+  notify:
+    - Reload AppArmor
+    - Restart nginx
+  lineinfile:
+    path: /etc/apparmor.d/usr.sbin.nginx
+    line: '#include <local/nginx-jenkins.conf>'
+    insertbefore: '}'
+
+- name: Copy fancyindex theme
+  tags: fancyindex
+  copy:
+    src: download-themes
+    dest: /var/lib/jenkins/
+    owner: jenkins
+    group: www-data
+
+- name: Create the directory to download files
+  file:
+    path: /var/lib/jenkins/downloads
+    state: directory
+    mode: 0750
+    owner: jenkins
+    group: www-data
+
+
+- name: Create the directory to backup files
+  file:
+    path: /var/backups/jenkins
+    state: directory
+    mode: 0700
+    owner: jenkins
+    group: jenkins

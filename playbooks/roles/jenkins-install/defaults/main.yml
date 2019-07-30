@@ -1,0 +1,17 @@
+---
+
+# Packages required for CI/CD in Jenkins
+jenkins_pkgs:
+  - default-jre-headless
+  - jenkins
+  - git
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg2
+  - libnginx-mod-http-fancyindex
+
+
+jenkins:
+  download_theme: light
+  download_dir: /var/lib/jenkins/download

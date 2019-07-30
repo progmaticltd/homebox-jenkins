@@ -1,0 +1,15 @@
+---
+
+# Build the portal from scratch
+
+- name: Build the Homebox portal web site
+  hosts: portal
+  vars_files:
+    - ../config/system.yml
+  roles:
+    - role: system-prepare
+      tags: system
+    - role: docker-install
+      tags: docker
+    - role: jenkins-install
+      tags: jenkins

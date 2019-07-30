@@ -1,0 +1,11 @@
+---
+
+
+- name: Update the packages
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade the distribution
+  apt:
+    upgrade: true
