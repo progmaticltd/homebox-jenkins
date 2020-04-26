@@ -5,11 +5,9 @@
 - name: Build the Homebox portal web site
   hosts: portal
   vars_files:
-    - ../config/system.yml
+     - '{{ playbook_dir }}/../config/system.yml'
   roles:
     - role: system-prepare
       tags: system
     - role: docker-install
       tags: docker
-    - role: jenkins-install
-      tags: jenkins

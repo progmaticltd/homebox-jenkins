@@ -7,10 +7,10 @@
 
 - name: Add Docker repository
   apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/debian stretch stable
+    repo: deb [arch=amd64] https://download.docker.com/linux/debian buster stable
     filename: docker
 
 - name: Install Docker packages
   apt:
-    name: [ docker-ce, docker-ce-cli, docker-compose ]
+    name: '{{ packages }}'
     state: latest

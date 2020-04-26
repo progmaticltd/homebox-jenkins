@@ -1,0 +1,3 @@
+# Ignore system configuration
+config/hosts.yml
+config/system.yml

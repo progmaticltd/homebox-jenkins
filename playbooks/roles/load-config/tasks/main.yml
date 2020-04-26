@@ -1,5 +1,0 @@
----
-
-- name: Load configuration variables
-  include_vars:
-     file: '{{ playbook_dir }}/../config/vars.yml'
