@@ -1,6 +1,11 @@
 ---
 
 # Build the portal from scratch
+- name: Install the required packages locally
+  hosts: localhost
+  become: true
+  roles:
+    - role: local-setup
 
 - name: Build the Homebox portal web site
   hosts: portal
@@ -11,3 +16,5 @@
       tags: system
     - role: docker-install
       tags: docker
+    - role: jenkins-install
+      tags: jenkins

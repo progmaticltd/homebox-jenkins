@@ -1,0 +1,28 @@
+---
+
+- name: Add GPG key
+  register: apt_key
+  apt_key:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+    state: present
+
+- name: Add repository
+  register: apt_repository
+  apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    filename: jenkins
+
+- name: Install Java package for Jenkins
+  apt:
+    name: '{{ packages.java }}'
+    state: present
+
+- name: Install Jenkins dependency packages
+  apt:
+    name: '{{ packages.dependencies }}'
+    state: present
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present

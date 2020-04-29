@@ -1,0 +1,97 @@
+---
+
+- name: Store Jenkins root
+  set_fact:
+    jenkins_root: /var/lib/jenkins
+
+- name: Run the command to check Jenkins' version
+  register: jenkins_version_cmd
+  shell: "dpkg -s jenkins | sed -n 's/^Version: //p'"
+
+- name: Store Jenkins version
+  set_fact:
+    jenkins_version: '{{ jenkins_version_cmd.stdout }}'
+
+- name: Deploy the XML configuration
+  template:
+    src: config.xml
+    dest: '{{ jenkins_root }}/config.xml'
+
+- name: Delete initial admin password and users
+  file:
+    path: '{{ path }}'
+    state: absent
+  loop:
+    - '{{ jenkins_root }}/secrets/initialAdminPassword'
+    - '{{ jenkins_root }}/users/'
+  loop_control:
+    loop_var: path
+
+- name: Create the administrator password
+  set_fact:
+    admin_password: '{{ lookup(pwdstore.type, pwdstore.prefix + "/jenkins/admin" + pwdstore.opts.create) }}'
+    salt: '{{ lookup("password", "/dev/null chars=ascii_letters,digits,hexdigits length=21") + "." }}'
+    admin_user_id: '{{ lookup("password", "/dev/null chars=digits length=19") }}'
+    seed: '{{ ansible_date_time.iso8601_micro | to_uuid | replace("-", "") }}'
+
+- name: Create users directory
+  file:
+    path: '{{ path }}'
+    state: directory
+    owner: jenkins
+    group: jenkins
+  loop:
+    - '{{ jenkins_root }}/users/'
+    - '{{ jenkins_root }}/logs/tasks'
+    - '{{ jenkins_root }}/users/admin_{{ admin_user_id }}'
+    - '{{ jenkins_root }}/secrets/'
+  loop_control:
+    loop_var: path
+
+- name: Copy users configuration
+  notify: Restart Jenkins
+  template:
+    src: users.xml
+    dest: '{{ jenkins_root }}/users/users.xml'
+    owner: jenkins
+    group: jenkins
+
+- name: Copy admin user configuration
+  notify: Restart Jenkins
+  template:
+    src: users-admin.xml
+    dest: '{{ jenkins_root }}/users/admin_{{ admin_user_id }}/config.xml'
+    owner: jenkins
+    group: jenkins
+
+- name: Store the Jenkins version installed
+  notify: Restart Jenkins
+  lineinfile:
+    path: '{{ jenkins_root }}/jenkins.install.InstallUtil.lastExecVersion'
+    line: '{{ jenkins_version }}'
+    create: true
+    owner: jenkins
+    group: jenkins
+
+- name: Create jenkins xml configuration
+  notify: Restart Jenkins
+  template:
+    src: jenkins.model.JenkinsLocationConfiguration.xml
+    dest: '{{ jenkins_root }}/jenkins.model.JenkinsLocationConfiguration.xml'
+    owner: jenkins
+    group: jenkins
+
+- name: Copy other templates
+  notify: Restart Jenkins
+  template:
+    src: '{{ template }}'
+    dest: '{{ jenkins_root }}/{{ template }}'
+    owner: jenkins
+    group: jenkins
+  loop:
+    - jenkins.security.QueueItemAuthenticatorConfiguration.xml
+    - jenkins.security.UpdateSiteWarningsConfiguration.xml
+    - jenkins.security.apitoken.ApiTokenPropertyConfiguration.xml
+    - secrets/slave-to-master-security-kill-switch
+  loop_control:
+    loop_var: template

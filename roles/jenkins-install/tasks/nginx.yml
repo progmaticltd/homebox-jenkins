@@ -1,0 +1,14 @@
+---
+
+- name: Deploy nginx web site
+  notify: Restart nginx
+  template:
+    src: nginx.conf
+    dest: '/etc/nginx/sites-available/jenkins.{{ network.domain }}.conf'
+
+- name: Active the nginx web site
+  notify: Restart nginx
+  file:
+    src: '/etc/nginx/sites-available/jenkins.{{ network.domain }}.conf'
+    dest: '/etc/nginx/sites-enabled/jenkins.{{ network.domain }}.conf'
+    state: link

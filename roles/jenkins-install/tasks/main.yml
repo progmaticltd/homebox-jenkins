@@ -1,0 +1,13 @@
+---
+
+- name: Install the dependency packages
+  include_tasks:
+    file: packages.yml
+
+- name: Install and configure jenkins
+  include_tasks:
+    file: config.yml
+
+- name: Install and configure nginx
+  include_tasks:
+    file: nginx.yml

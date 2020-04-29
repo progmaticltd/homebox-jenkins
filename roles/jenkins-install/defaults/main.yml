@@ -1,0 +1,6 @@
+---
+
+packages:
+  java: openjdk-11-jre-headless
+  dependencies:
+    - nginx-full
