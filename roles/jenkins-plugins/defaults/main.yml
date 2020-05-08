@@ -9,3 +9,4 @@ jenkins_plugins:
   - ansicolor
   - workflow-aggregator
   - ssh-agent
+  - badge
