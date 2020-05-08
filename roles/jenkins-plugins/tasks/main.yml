@@ -1,0 +1,17 @@
+---
+
+- name: Read the administrator password
+  set_fact:
+    admin_token: '{{ lookup(pwdstore.type, pwdstore.prefix + "/jenkins/admin-token") }}'
+
+- name: Install plugins
+  notify: Restart Jenkins
+  jenkins_plugin:
+    url: 'https://jenkins.{{ network.domain }}/'
+    name: '{{ plugin }}'
+    with_dependencies: yes
+    url_username: admin
+    url_password: '{{ admin_token }}'
+  loop: '{{ jenkins_plugins }}'
+  loop_control:
+    loop_var: plugin

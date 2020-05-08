@@ -18,3 +18,7 @@
       tags: docker
     - role: jenkins-install
       tags: jenkins
+    - role: jenkins-plugins
+      tags: jenkins,plugins
+    - role: jenkins-jobs
+      tags: jenkins,jobs

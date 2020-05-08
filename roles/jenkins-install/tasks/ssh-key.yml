@@ -1,0 +1,69 @@
+---
+
+- name: Set backup directory
+  set_fact:
+    backup_dir: '{{ playbook_dir }}/../../homebox/backup/{{ network.domain }}'
+
+- name: Ensure the backup folder contains a jenkins directory
+  delegate_to: localhost
+  file:
+    path: '{{ backup_dir }}/jenkins/.ssh'
+    state: directory
+    mode: '0700'
+
+- name: Create or read the passphrase for Jenkins SSH key
+  set_fact:
+    jenkins_key_passphrase: >-
+      {{ lookup(pwdstore.type,
+      pwdstore.prefix + "/jenkins/ssh-key"
+      + pwdstore.opts.create
+      + pwdstore.opts.system) }}
+
+- name: Push the Jenkins key if already generated
+  synchronize:
+    src: '{{ backup_dir }}/jenkins/.ssh'
+    dest: /var/lib/jenkins/
+    mode: push
+    owner: yes
+    group: yes
+    perms: yes
+    rsync_opts:
+      - '--no-motd'
+      - '--ignore-existing'
+      - '--update'
+      - '--chmod=D0755,F0600'
+      - '--chown=jenkins:jenkins'
+
+- name: Generate an SSH key for Jenkins
+  register: jenkins_ssh_key
+  become: true
+  become_user: jenkins
+  shell: >-
+    ssh-keygen -t ecdsa
+    -C 'Jenkins CI key'
+    -P '{{ jenkins_key_passphrase }}'
+    -f /var/lib/jenkins/.ssh/id_ecdsa
+  args:
+    creates: /var/lib/jenkins/.ssh/id_ecdsa
+
+- name: Pull the Jenkins key generated
+  when: jenkins_ssh_key.changed
+  synchronize:
+    src: /var/lib/jenkins/.ssh
+    dest: '{{ backup_dir }}/jenkins/'
+    mode: pull
+    perms: yes
+    rsync_opts:
+      - '--no-motd'
+      - '--exclude=readme.md'
+      - '--exclude=renewal-hooks'
+      - '--update'
+      - '--chmod=D0755,F0600'
+
+- name: Scan GitHub SSH key
+  become: true
+  become_user: jenkins
+  shell: >-
+    ssh-keyscan github.com >~/.ssh/known_hosts
+  args:
+    creates: /var/lib/jenkins/.ssh/known_hosts

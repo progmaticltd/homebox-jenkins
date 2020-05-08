@@ -4,3 +4,7 @@ packages:
   java: openjdk-11-jre-headless
   dependencies:
     - nginx-full
+    - mkdocs
+
+jenkins:
+  cli_port: 2288

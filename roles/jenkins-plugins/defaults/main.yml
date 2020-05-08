@@ -1,0 +1,11 @@
+---
+
+jenkins_plugins:
+  - build-pipeline-plugin
+  - pipeline
+  - git-parameter
+  - ansible
+  - docker
+  - ansicolor
+  - workflow-aggregator
+  - ssh-agent

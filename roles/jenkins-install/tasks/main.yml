@@ -1,13 +1,12 @@
 ---
 
-- name: Install the dependency packages
+- name: Call all tasks
   include_tasks:
-    file: packages.yml
-
-- name: Install and configure jenkins
-  include_tasks:
-    file: config.yml
-
-- name: Install and configure nginx
-  include_tasks:
-    file: nginx.yml
+    file: '{{ step }}.yml'
+  loop:
+    - packages
+    - config
+    - nginx
+    - ssh-key
+  loop_control:
+    loop_var: step

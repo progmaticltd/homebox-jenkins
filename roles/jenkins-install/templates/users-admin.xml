@@ -31,7 +31,7 @@
     </hudson.search.UserSearchProperty>
     <hudson.model.TimeZoneProperty/>
     <hudson.security.HudsonPrivateSecurityRealm_-Details>
-      <passwordHash>#jbcrypt:{{ admin_password | password_hash("bcrypt", rounds=10) }}</passwordHash>
+      <passwordHash>#jbcrypt:{{ admin_password_hash }}</passwordHash>
     </hudson.security.HudsonPrivateSecurityRealm_-Details>
   </properties>
 </user>

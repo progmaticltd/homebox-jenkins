@@ -1,5 +1,9 @@
 ---
 
+- name: Set backup directory
+  set_fact:
+    backup_dir: '{{ playbook_dir }}/../../homebox/backup/{{ network.domain }}/jenkins/'
+
 - name: Store Jenkins root
   set_fact:
     jenkins_root: /var/lib/jenkins
@@ -27,12 +31,22 @@
   loop_control:
     loop_var: path
 
-- name: Create the administrator password
+- name: Create or read the amdin uid
+  set_fact:
+    admin_user_id: '{{ lookup("password", backup_dir + "admin-uid chars=digits length=19") }}'
+
+- name: Create the administrator credentials
   set_fact:
     admin_password: '{{ lookup(pwdstore.type, pwdstore.prefix + "/jenkins/admin" + pwdstore.opts.create) }}'
-    salt: '{{ lookup("password", "/dev/null chars=ascii_letters,digits,hexdigits length=21") + "." }}'
-    admin_user_id: '{{ lookup("password", "/dev/null chars=digits length=19") }}'
     seed: '{{ ansible_date_time.iso8601_micro | to_uuid | replace("-", "") }}'
+
+# It seems passlib generate ‘2b’ variant, and Jenkins only recognise ‘2a’
+- name: Create a Jenkins compatible password hash
+  set_fact:
+    admin_password_hash: >-
+      {{ admin_password |
+      password_hash("bcrypt", salt=None, rounds=10)
+      | replace("$2b$10", "$2a$10") }}
 
 - name: Create users directory
   file:
@@ -92,6 +106,7 @@
     - jenkins.security.QueueItemAuthenticatorConfiguration.xml
     - jenkins.security.UpdateSiteWarningsConfiguration.xml
     - jenkins.security.apitoken.ApiTokenPropertyConfiguration.xml
+    - org.jenkinsci.main.modules.sshd.SSHD.xml
     - secrets/slave-to-master-security-kill-switch
   loop_control:
     loop_var: template

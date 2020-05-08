@@ -1,0 +1,6 @@
+---
+
+- name: Install the required packages locally
+  apt:
+    name: '{{ packages }}'
+    state: present

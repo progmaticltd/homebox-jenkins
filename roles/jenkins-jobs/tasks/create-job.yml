@@ -1,0 +1,12 @@
+---
+- name: Create the administrator password
+  set_fact:
+    admin_token: '{{ lookup(pwdstore.type, pwdstore.prefix + "/jenkins/admin-token") }}'
+
+- name: Create the Jenkins job
+  jenkins_job:
+    user: admin
+    token: '{{ admin_token }}'
+    state: present
+    name: '{{ job.name }}'
+    config: '{{ lookup("template", job.name + ".xml") }}'

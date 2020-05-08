@@ -13,4 +13,4 @@
 - name: Install Docker packages
   apt:
     name: '{{ packages }}'
-    state: latest
+    state: present
